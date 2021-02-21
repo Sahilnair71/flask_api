@@ -55,7 +55,7 @@ def init_model():
     # Initialize the Model using the saved Quantized Model
     print('\n\nInitializing Model...')
     try:
-        model = torch.load('models/convnet-quantized-full.pt')
+        model = torch.load('./models/convnet-quantized-full.pt', map_location='cpu')
         print('Model Loaded Successfully')
     except:
         print('ERROR: Could not Initialize the Model.')
