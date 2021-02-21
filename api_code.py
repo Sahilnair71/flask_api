@@ -113,6 +113,10 @@ def upload():
     predictions = predict(image, facec, model)
     return jsonify({'result': predictions,})
 
+@app.route('/')
+def index():
+    return '<h1>Test</h1>'
+
 if __name__ == '__main__':
     app.run(debug=True)
 
