@@ -13,7 +13,6 @@ classes = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 app = Flask(__name__)
 
 
-
 def load_image(imagePath):
     """
     Load the image from the specified folder.
@@ -27,7 +26,7 @@ def load_image(imagePath):
         if input_image is None:
             raise IOError
         print('Input Image Loaded Successfully')
-    except IOError: 
+    except IOError:
         print('ERROR: Could not Load the input Image')
         sys.exit(1)
 
@@ -39,29 +38,34 @@ def init_face_classifier():
     Load the Cascade Classifier and initialize it with the weights from the Haar Cascade Classifier.
     """
     print('\n\nLoading the Cascade Classifier')
-    try:
-        facec = CascadeClassifier('models/haarcascade_frontalface_default.xml')
-        print('Cascade Classifier Loaded Successfully')
-    except:
-        print('ERROR: Could not Load the Cascade Classifier')
-        sys.exit(1)
-    
+    # try:
+    facec = CascadeClassifier('models/haarcascade_frontalface_default.xml')
+    print('Cascade Classifier Loaded Successfully')
+    # except:
+    #     print('ERROR: Could not Load the Cascade Classifier')
+    #     sys.exit(1)
+
     return facec
+
 
 def init_model():
     """
     Load the saved quantized model for inference.
     """
     # Initialize the Model using the saved Quantized Model
+    torch.backends.quantized.engine = 'qnnpack'
     print('\n\nInitializing Model...')
-    try:
-        model = torch.load('./models/convnet-quantized-full.pt', map_location='cpu')
-        print('Model Loaded Successfully')
-    except:
-        print('ERROR: Could not Initialize the Model.')
-        sys.exit(1)
+    model = jit.load('models/convnet-traced-new.pt', map_location='cpu')
+    print('Model Loaded Successfully')
+    # try:
+
+    # except Exception as e:
+    #     print(e)
+    #     print('ERROR: Could not Initialize the Model.')
+    #     sys.exit(1)
 
     return model
+
 
 def predict(image, facec, model):
     """
@@ -78,7 +82,7 @@ def predict(image, facec, model):
         # Crop the face into a separate image
         cropped_face = grayscale_image[y:y+h, x:x+w]
         # Resize the image into an image of size 48x48
-        resized_face = resize(cropped_face, (48,48))
+        resized_face = resize(cropped_face, (48, 48))
         # Convert the image into a PIL image
         PIL_image = Image.fromarray(resized_face)
         # Preprocess the image using torchvision.transforms
@@ -95,12 +99,15 @@ def predict(image, facec, model):
         predictions.append(prediction)
         print(f'\nPrediction for Face {current} => {prediction}')
         # Add the rectangle and label to the original image
-        putText(image, prediction, (x, y-10), FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-        rectangle(image, (x,y), (x+w, y+h), (0, 255, 0), 2)
+        putText(image, prediction, (x, y-10),
+                FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        rectangle(image, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
         current += 1
     imwrite('result.jpg', image)
     return predictions
+
+
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     file = request.files['image']
@@ -111,14 +118,13 @@ def upload():
     model = init_model()
     # This function will return a string array contianing all the predictions
     predictions = predict(image, facec, model)
-    return jsonify({'result': predictions,})
+    return jsonify({'result': predictions, })
+
 
 @app.route('/')
 def index():
     return '<h1>Test</h1>'
 
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-    
