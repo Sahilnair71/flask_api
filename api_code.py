@@ -6,6 +6,7 @@ import torchvision.transforms as tt
 from models.convnet import ConvNet
 from cv2 import CascadeClassifier, COLOR_BGR2GRAY, cvtColor, FONT_HERSHEY_SIMPLEX, putText, rectangle, resize, imread, imwrite
 from PIL import Image
+import torch.jit as jit
 
 classes = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
 
@@ -68,9 +69,6 @@ def init_model():
 
 
 def predict(image, facec, model):
-    """
-    This function processes the image, detects the faces on the image and predicts the classes of faces on the image.
-    """
     predictions = []
     # Convert the image into a grayscale image
     grayscale_image = cvtColor(image, COLOR_BGR2GRAY)
@@ -86,7 +84,7 @@ def predict(image, facec, model):
         # Convert the image into a PIL image
         PIL_image = Image.fromarray(resized_face)
         # Preprocess the image using torchvision.transforms
-        preprocess = tt.Compose([tt.Grayscale(1), tt.ToTensor()])
+        preprocess = tt.Compose([tt.Grayscale(3), tt.ToTensor()])
         processed_image = preprocess(PIL_image)
         print(f'Processed Image Shape => {processed_image.shape}')
         # Run predictions
